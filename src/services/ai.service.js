@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({
 
 async function generateContent(prompt) {
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-1.5-flash",
     systemInstruction:` You are a Staff-Level Software Engineer performing a production-grade code review.
 
 Think step-by-step internally before answering, but present only structured final output.
