@@ -5,10 +5,19 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_KEY,
 });
 
-async function generateContent(prompt) {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    systemInstruction:` You are a Staff-Level Software Engineer performing a production-grade code review.
+// delay function to prevent rate limit
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function generateContent(prompt, retries = 3) {
+
+  try {
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+
+      systemInstruction: `You are a Staff-Level Software Engineer performing a production-grade code review.
 
 Think step-by-step internally before answering, but present only structured final output.
 
@@ -33,17 +42,41 @@ If applicable:
 - Suggest test cases
 - Suggest monitoring/logging improvements
 
-Output must be structured and concise.` ,
+Output must be structured and concise.`,
 
-contents: [
-  {
-    role: "user",
-    parts: [{ text: prompt }]
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
+        }
+      ],
+    });
+
+    // safe response parsing
+    const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+      throw new Error("Empty AI response");
+    }
+
+    return text;
+
+  } catch (error) {
+
+    console.error("Gemini API Error:", error.message);
+
+    // retry if rate limit
+    if (retries > 0) {
+
+      console.log(Retrying AI request... (${retries}));
+
+      await delay(3000);
+
+      return generateContent(prompt, retries - 1);
+    }
+
+    throw error;
   }
-],
-  });
-
-  return response.text;
 }
 
 module.exports = generateContent;
