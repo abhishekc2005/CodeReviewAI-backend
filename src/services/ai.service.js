@@ -75,7 +75,7 @@ Give structured feedback.
 
       const attempt = 4 - retries;
 
-      console.log(🔁 Retrying AI request (attempt ${attempt}));
+      console.log(`🔁 Retrying AI request (attempt ${attempt})`);
 
       await delay(backoff(attempt));
 
