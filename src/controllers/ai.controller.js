@@ -9,23 +9,37 @@ module.exports.getReview = async (req, res) => {
 
   try {
 
+    console.log("📥 AI Review request received");
+
     // safe body parsing
     const code = req?.body?.code;
 
     if (!code || code.trim().length === 0) {
+      console.log("⚠️ No code received in request");
+
       return res.status(400).json({
+        success: false,
         error: "Code is required"
       });
     }
 
-    // delay to avoid API rate limit
+    console.log("🧠 Code length:", code.length);
+
+    // delay to avoid rate limit
     await delay(2000);
+
+    console.log("⚡ Sending code to AI service...");
 
     // call AI service
     const review = await aiService(code);
 
+    console.log("✅ AI response received");
+
     if (!review) {
+      console.log("❌ AI returned empty response");
+
       return res.status(500).json({
+        success: false,
         error: "AI returned empty response"
       });
     }
@@ -38,7 +52,7 @@ module.exports.getReview = async (req, res) => {
 
   } catch (error) {
 
-    console.error("AI Controller Error:", error.message);
+    console.error("🔥 AI Controller Error:", error);
 
     return res.status(500).json({
       success: false,
