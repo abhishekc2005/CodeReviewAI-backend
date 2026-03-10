@@ -1,19 +1,29 @@
-const express = require('express');
+const express = require("express");
+const cors = require("cors");
 
-const cors = require('cors')
+const aiRoutes = require("./routes/ai.routes");
 
-const aiRoutes = require('./routes/ai.routes')
+const app = express();
 
-const app = express()
+// middlewares
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
 
-app.use(cors())
-
-app.use(express.json())
-
-app.get('/', (req, res) => {
-    res.send('Hello World!')
+// health route
+app.get("/", (req, res) => {
+  res.send("🚀 CodeReviewAI Backend Running");
 });
 
-app.use('/ai',aiRoutes)
+// AI routes
+app.use("/ai", aiRoutes);
 
-module.exports = app
+// global error handler
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err);
+
+  res.status(500).json({
+    error: "Internal server error"
+  });
+});
+
+module.exports = app;
