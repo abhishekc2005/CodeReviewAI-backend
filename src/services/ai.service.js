@@ -24,7 +24,7 @@ async function generateContent(prompt, retries = 3) {
 
   try {
 
-    console.log("🧠 Sending request to Gemini API...");
+    console.log("Sending request to Gemini API...");
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
@@ -66,29 +66,27 @@ Output must be structured and concise.
       throw new Error("Gemini returned empty response");
     }
 
-    console.log("✅ AI review generated");
+    console.log("AI review generated successfully");
 
     return review;
 
   } catch (error) {
 
-    console.error("❌ Gemini API Error:", error.message);
+    console.error("Gemini API Error:", error.message);
 
-    // retry logic
     if (retries > 0) {
 
       const attempt = 4 - retries;
 
-      console.log(🔁 Retrying AI request (attempt ${attempt}));
+      console.log(Retrying AI request (attempt ${attempt}));
 
       await delay(backoff(attempt));
 
       return generateContent(prompt, retries - 1);
     }
 
-    console.error("🔥 AI service failed after retries");
+    console.error("AI service failed after retries");
 
-    // throw controlled error
     throw new Error("AI service unavailable");
   }
 }
