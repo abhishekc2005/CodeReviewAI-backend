@@ -1,4 +1,4 @@
-[12:43 PM, 3/10/2026] ABHISHEK CHOUDHARY: require("dotenv").config();
+require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
