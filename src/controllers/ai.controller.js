@@ -1,38 +1,50 @@
-const aiService = require("../services/ai.service")
+const aiService = require("../services/ai.service");
 
-function delay(ms){
-  return new Promise(resolve => setTimeout(resolve, ms))
+// delay function
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-module.exports.getReview = async (req,res)=>{
+module.exports.getReview = async (req, res) => {
 
- try{
+  try {
 
-   const code = req.body.code;
+    // safe body parsing
+    const code = req?.body?.code;
 
-   if(!code){
+    if (!code || code.trim().length === 0) {
       return res.status(400).json({
-         error:"Code is required"
-      })
-   }
+        error: "Code is required"
+      });
+    }
 
-   // small delay to avoid rate limit
-   await delay(2000)
+    // delay to avoid API rate limit
+    await delay(2000);
 
-   const response = await aiService(code);
+    // call AI service
+    const review = await aiService(code);
 
-   res.json({
-      review: response
-   })
+    if (!review) {
+      return res.status(500).json({
+        error: "AI returned empty response"
+      });
+    }
 
- }catch(error){
+    // success response
+    return res.status(200).json({
+      success: true,
+      review
+    });
 
-   console.error("AI Error:",error)
+  } catch (error) {
 
-   res.status(500).json({
-      error:"AI review failed"
-   })
+    console.error("AI Controller Error:", error.message);
 
- }
+    return res.status(500).json({
+      success: false,
+      error: "AI review failed. Try again later."
+    });
 
-}
+  }
+
+};
