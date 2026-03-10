@@ -1,41 +1,6 @@
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GEMINI_KEY,
-});
-
-// delay function to prevent rate limit
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function generateContent(prompt, retries = 3) {
-
-  try {
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-
-      systemInstruction: `You are a Staff-Level Software Engineer performing a production-grade code review.
-
-Focus on:
-- Code correctness
-- Edge cases
-- Error handling
-- Performance complexity
-- Security vulnerabilities
-- Clean architecture
-- SOLID principles
-- Scalability
-- Maintainability
-
-Avoid generic advice.
-
-If the code contains architectu…
-[12:45 PM, 3/10/2026] ABHISHEK CHOUDHARY: require("dotenv").config();
-const { GoogleGenAI } = require("@google/genai");
-
 // Validate API key early
 if (!process.env.GOOGLE_GEMINI_KEY) {
   throw new Error("GOOGLE_GEMINI_KEY environment variable is missing");
