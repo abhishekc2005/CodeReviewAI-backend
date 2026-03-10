@@ -58,7 +58,7 @@ Output must be structured and concise.`,
 
     if (retries > 0) {
 
-      console.log(Retrying AI request... (${retries}));
+      console.log(`Retrying AI request... (${retries})`);
 
       await delay(3000);
 
