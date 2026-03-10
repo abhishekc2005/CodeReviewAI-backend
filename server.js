@@ -1,8 +1,10 @@
-const app = require('./src/app')
+require("dotenv").config();
 
-require('dotenv').config();
+const app = require("./src/app");
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log('Server is running on port dedicated')
-})
+const PORT = process.env.PORT || 3000;
 
+// start server
+app.listen(PORT, () => {
+  console.log(🚀 Server running on port ${PORT});
+});
