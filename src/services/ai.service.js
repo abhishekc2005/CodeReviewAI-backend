@@ -19,28 +19,20 @@ async function generateContent(prompt, retries = 3) {
 
       systemInstruction: `You are a Staff-Level Software Engineer performing a production-grade code review.
 
-Think step-by-step internally before answering, but present only structured final output.
-
 Focus on:
 - Code correctness
 - Edge cases
 - Error handling
-- Performance complexity (Big-O if relevant)
+- Performance complexity
 - Security vulnerabilities
-- Clean architecture principles
+- Clean architecture
 - SOLID principles
-- Scalability concerns
+- Scalability
 - Maintainability
 
 Avoid generic advice.
 
-If the code contains architectural issues, suggest redesign patterns.
-
-If applicable:
-- Suggest design patterns
-- Suggest refactoring strategies
-- Suggest test cases
-- Suggest monitoring/logging improvements
+If the code contains architectural issues suggest redesign patterns.
 
 Output must be structured and concise.`,
 
@@ -52,12 +44,11 @@ Output must be structured and concise.`,
       ],
     });
 
-    // safe response parsing
-    const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      throw new Error("Empty AI response");
-    }
+    // safer parsing
+    const text =
+      response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      response?.text ||
+      "No response generated.";
 
     return text;
 
@@ -65,7 +56,6 @@ Output must be structured and concise.`,
 
     console.error("Gemini API Error:", error.message);
 
-    // retry if rate limit
     if (retries > 0) {
 
       console.log(Retrying AI request... (${retries}));
@@ -75,7 +65,7 @@ Output must be structured and concise.`,
       return generateContent(prompt, retries - 1);
     }
 
-    throw error;
+    throw new Error("AI service failed after retries");
   }
 }
 
