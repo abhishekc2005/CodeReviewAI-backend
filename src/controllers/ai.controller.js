@@ -1,6 +1,5 @@
 const aiService = require("../services/ai.service");
 
-// delay function
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -11,12 +10,9 @@ module.exports.getReview = async (req, res) => {
 
     console.log("📥 AI Review request received");
 
-    // safe body parsing
     const code = req?.body?.code;
 
     if (!code || code.trim().length === 0) {
-      console.log("⚠️ No code received in request");
-
       return res.status(400).json({
         success: false,
         error: "Code is required"
@@ -25,26 +21,20 @@ module.exports.getReview = async (req, res) => {
 
     console.log("🧠 Code length:", code.length);
 
-    // delay to avoid rate limit
+    // small delay to reduce API spam
     await delay(2000);
 
-    console.log("⚡ Sending code to AI service...");
-
-    // call AI service
     const review = await aiService(code);
 
-    console.log("✅ AI response received");
-
     if (!review) {
-      console.log("❌ AI returned empty response");
-
       return res.status(500).json({
         success: false,
         error: "AI returned empty response"
       });
     }
 
-    // success response
+    console.log("✅ AI review generated");
+
     return res.status(200).json({
       success: true,
       review
@@ -52,11 +42,27 @@ module.exports.getReview = async (req, res) => {
 
   } catch (error) {
 
-    console.error("🔥 AI Controller Error:", error);
+    console.error("🔥 AI Controller Error:", error.message);
+
+    // quota exceeded
+    if (error.message === "QUOTA_EXCEEDED") {
+      return res.status(429).json({
+        success: false,
+        error: "AI quota exceeded. Please try again later."
+      });
+    }
+
+    // AI service failure
+    if (error.message === "AI_SERVICE_FAILED") {
+      return res.status(500).json({
+        success: false,
+        error: "AI service temporarily unavailable"
+      });
+    }
 
     return res.status(500).json({
       success: false,
-      error: "AI review failed. Try again later."
+      error: "Unexpected server error"
     });
 
   }
