@@ -9,7 +9,7 @@ const requestMap = new Map();
 function rateLimiter(req, res, next) {
   const ip = req.ip;
   const now = Date.now();
-  const windowTime = 10 * 1000; // 10 seconds
+  const windowTime = 15 * 1000; // 10 seconds
 
   if (requestMap.has(ip)) {
     const lastRequest = requestMap.get(ip);
