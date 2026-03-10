@@ -2,11 +2,11 @@ require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 
 if (!process.env.GOOGLE_GEMINI_KEY) {
-  throw new Error("GOOGLE_GEMINI_KEY missing");
+  throw new Error("GOOGLE_GEMINI_KEY missing in environment variables");
 }
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GEMINI_KEY,
+  apiKey: process.env.GOOGLE_GEMINI_KEY
 });
 
 function delay(ms) {
@@ -21,24 +21,23 @@ async function generateContent(prompt, retries = 3) {
 
   try {
 
-    console.log("🧠 Sending request to Gemini");
+    console.log("🧠 Sending request to Gemini API");
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash", // more stable free tier
 
       systemInstruction: `
-You are a Staff-Level Software Engineer performing a professional code review.
+You are a senior software engineer performing a professional code review.
 
 Focus on:
-- Bugs
-- Edge cases
-- Error handling
-- Performance
-- Security
-- Clean architecture
+- bugs
+- edge cases
+- performance
+- security
+- clean architecture
 - SOLID principles
 
-Give structured feedback.
+Return structured feedback.
 `,
 
       contents: [
@@ -46,21 +45,14 @@ Give structured feedback.
           role: "user",
           parts: [{ text: prompt }]
         }
-      ],
+      ]
     });
 
-    let review = null;
-
-    if (response?.text) {
-      review = response.text;
-    }
-
-    if (!review && response?.candidates?.length) {
-      review = response.candidates[0]?.content?.parts?.[0]?.text;
-    }
+    let review = response?.text ||
+                 response?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!review) {
-      throw new Error("Gemini returned empty response");
+      throw new Error("EMPTY_RESPONSE");
     }
 
     console.log("✅ Gemini response received");
@@ -71,19 +63,29 @@ Give structured feedback.
 
     console.error("❌ Gemini Error:", error.message);
 
+    // detect quota exceeded
+    if (
+      error.message.includes("quota") ||
+      error.message.includes("429") ||
+      error.message.includes("RESOURCE_EXHAUSTED")
+    ) {
+      throw new Error("QUOTA_EXCEEDED");
+    }
+
     if (retries > 0) {
 
       const attempt = 4 - retries;
 
-      console.log(`🔁 Retrying AI request (attempt ${attempt})`);
+      console.log(🔁 Retrying AI request (attempt ${attempt}));
 
       await delay(backoff(attempt));
 
       return generateContent(prompt, retries - 1);
     }
 
-    throw new Error("AI service unavailable");
+    throw new Error("AI_SERVICE_FAILED");
   }
+
 }
 
 module.exports = generateContent;
