@@ -1,89 +1,55 @@
-require("dotenv").config();
-const { GoogleGenAI } = require("@google/genai");
+const Groq = require("groq-sdk");
 
-if (!process.env.GOOGLE_GEMINI_KEY) {
-  throw new Error("GOOGLE_GEMINI_KEY missing in environment variables");
-}
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GEMINI_KEY
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
 });
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function backoff(attempt) {
-  return 2000 * attempt;
-}
-
-async function generateContent(prompt, retries = 3) {
+async function generateContent(prompt) {
 
   try {
 
-    console.log("🧠 Sending request to Gemini API");
+    console.log("Sending request to Groq AI...");
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash", // more stable free tier
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: `
+You are a Staff-Level Software Engineer performing a professional code review.
 
-      systemInstruction: `
-You are a senior software engineer performing a professional code review.
+Return structured feedback with these sections:
 
-Focus on:
-- bugs
-- edge cases
-- performance
-- security
-- clean architecture
-- SOLID principles
+1. Code Quality
+2. Bugs / Issues
+3. Performance Improvements
+4. Security Concerns
+5. Best Practices
+6. Suggested Refactoring
+7. Example Improved Code (if needed)
 
-Return structured feedback.
-`,
-
-      contents: [
+Focus on real engineering improvements.
+Avoid generic advice.
+`
+        },
         {
           role: "user",
-          parts: [{ text: prompt }]
+          content: prompt
         }
-      ]
+      ],
+      model: "llama3-70b-8192",
+      temperature: 0.3
     });
 
-    let review = response?.text ||
-                 response?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const response = chatCompletion.choices[0]?.message?.content;
 
-    if (!review) {
-      throw new Error("EMPTY_RESPONSE");
-    }
-
-    console.log("✅ Gemini response received");
-
-    return review;
+    return response || "No review generated.";
 
   } catch (error) {
 
-    console.error("❌ Gemini Error:", error.message);
+    console.error("Groq API Error:", error);
 
-    // detect quota exceeded
-    if (
-      error.message.includes("quota") ||
-      error.message.includes("429") ||
-      error.message.includes("RESOURCE_EXHAUSTED")
-    ) {
-      throw new Error("QUOTA_EXCEEDED");
-    }
+    throw new Error("AI service failed");
 
-    if (retries > 0) {
-
-      const attempt = 4 - retries;
-
-      console.log(`🔁 Retrying AI request (attempt ${attempt})`);
-
-      await delay(backoff(attempt));
-
-      return generateContent(prompt, retries - 1);
-    }
-
-    throw new Error("AI_SERVICE_FAILED");
   }
 
 }
