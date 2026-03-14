@@ -6,52 +6,33 @@ const groq = new Groq({
 
 async function generateContent(prompt) {
 
-  try {
+  const response = await groq.chat.completions.create({
+    model: "llama-3.1-8b-instant",
 
-    console.log("Sending request to Groq AI...");
+    messages: [
+      {
+        role: "system",
+        content: `
+You are a senior software engineer performing a professional code review.
 
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: `
-You are a Staff-Level Software Engineer performing a professional code review.
-
-Return structured feedback with these sections:
-
+Return structured feedback with:
 1. Code Quality
 2. Bugs / Issues
 3. Performance Improvements
 4. Security Concerns
 5. Best Practices
-6. Suggested Refactoring
-7. Example Improved Code (if needed)
-
-Focus on real engineering improvements.
-Avoid generic advice.
 `
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      model: "llama3-70b-8192",
-      temperature: 0.3
-    });
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
 
-    const response = chatCompletion.choices[0]?.message?.content;
+    temperature: 0.3
+  });
 
-    return response || "No review generated.";
-
-  } catch (error) {
-
-    console.error("Groq API Error:", error);
-
-    throw new Error("AI service failed");
-
-  }
-
+  return response.choices[0].message.content;
 }
 
 module.exports = generateContent;
